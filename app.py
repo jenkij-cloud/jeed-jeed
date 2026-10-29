@@ -6,6 +6,7 @@ on chest X-ray images to detect 14 types of lung abnormalities.
 """
 
 import io
+import time
 import base64
 from pathlib import Path
 from datetime import datetime
@@ -377,9 +378,15 @@ async def index(request: Request):
 
 
 @app.post("/api/predict")
-async def predict(file: UploadFile = File(...), modality: str = Form("xray")):
+async def predict(
+    file: UploadFile = File(...),
+    modality: str = Form("xray"),
+    conf_threshold: float = Form(0.25),
+):
     """Run YOLO inference on an uploaded X-ray or CT image."""
     try:
+        start_time = time.time()
+
         # Read and decode the image
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
@@ -408,7 +415,9 @@ async def predict(file: UploadFile = File(...), modality: str = Form("xray")):
 
         # Run inference
         is_segmentation = (modality == "brain_ct")
-        results = current_model.predict(source=image, conf=0.25, verbose=False)
+        # Ensure threshold is within reasonable bounds
+        effective_conf = max(0.05, min(0.95, float(conf_threshold)))
+        results = current_model.predict(source=image, conf=effective_conf, verbose=False)
 
         # Draw annotations on image
         if is_segmentation:
@@ -470,6 +479,7 @@ async def predict(file: UploadFile = File(...), modality: str = Form("xray")):
 
         # Sort by confidence (highest first)
         detections.sort(key=lambda d: d["confidence"], reverse=True)
+        inference_time_ms = round((time.time() - start_time) * 1000, 1)
 
         return JSONResponse(content={
             "success": True,
@@ -480,6 +490,8 @@ async def predict(file: UploadFile = File(...), modality: str = Form("xray")):
             "image_size": {"width": image.shape[1], "height": image.shape[0]},
             "analyzed_at": datetime.now().isoformat(),
             "analysis_type": "segmentation" if is_segmentation else "detection",
+            "inference_time_ms": inference_time_ms,
+            "conf_threshold": effective_conf,
         })
 
     except Exception as e:

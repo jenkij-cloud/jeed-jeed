@@ -3,131 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Soma scope — Clinical Decision Support System for Medical Image Analysis">
-    <title>Soma scope — Clinical Diagnostic Platform</title>
+    <meta name="description" content="Soma scope — Advanced Clinical Decision Support System (CDSS) for Medical Imaging & AI Diagnostics">
+    <title>Soma scope — Clinical AI Diagnostic Workstation</title>
+    <!-- Modern Typography: Plus Jakarta Sans & Noto Sans Thai -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=5">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=12">
 </head>
-<body>
+<body class="theme-hospital">
 
-    <!-- ══════════════════════ HEADER ══════════════════════ -->
-    <header class="header" id="appHeader">
-        <div class="header-content">
-            <div class="logo">
-                <div class="logo-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ══════════════════════ HOSPITAL WORKSTATION HEADER ══════════════════════ -->
+    <header class="hospital-header" id="appHeader">
+        <div class="header-container">
+            <div class="brand-group">
+                <div class="brand-logo-badge">
+                    <svg class="pulse-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                     </svg>
+                    <div class="radar-ping"></div>
                 </div>
-                <div class="logo-text">
-                    <h1>Soma <span class="accent">scope</span></h1>
-                    <p class="tagline">Clinical Decision Support System</p>
+                <div class="brand-identity">
+                    <div class="brand-title-wrap">
+                        <span class="brand-main">SOMA</span>
+                        <span class="brand-accent">SCOPE</span>
+                        <span class="brand-version">CDSS v2.6</span>
+                    </div>
+                    <span class="brand-subtitle">AI-Assisted Clinical Diagnostic Workstation · Radiologic Intelligence</span>
                 </div>
             </div>
-            <div class="header-right">
-                <div class="header-badge">
-                    <span class="badge-dot"></span>
-                    <span>System Online</span>
+
+            <!-- Hospital Telemetry HUD -->
+            <div class="header-telemetry">
+                <div class="telemetry-pill">
+                    <span class="status-indicator-dot online"></span>
+                    <span class="telemetry-label">YOLO Core:</span>
+                    <span class="telemetry-val">Ensemble v8/11</span>
+                </div>
+                <div class="telemetry-pill d-none-mobile">
+                    <span class="telemetry-label">PACS Bridge:</span>
+                    <span class="telemetry-val">DICOM 3.0</span>
+                </div>
+                <div class="telemetry-pill d-none-mobile">
+                    <span class="telemetry-label">Institution:</span>
+                    <span class="telemetry-val highlight">INNOVATION-MED-CENTER</span>
+                </div>
+                <div class="hospital-clock" id="hospitalClock">
+                    <span id="clockTime">--:--:--</span>
+                    <span id="clockDate" class="clock-date">--/--/----</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- ══════════════════════ MAIN ══════════════════════ -->
-    <main class="main-container">
-
-        <!-- ────── STEP 1: Modality Selection ────── -->
-        <section class="step-section" id="stepModality">
-            <div class="step-header">
-                <span class="step-number">1</span>
-                <div>
-                    <h2 class="step-title">เลือกประเภทการวิเคราะห์</h2>
-                    <p class="step-desc">กรุณาเลือกประเภทของภาพถ่ายทางการแพทย์ที่ต้องการวิเคราะห์</p>
+    <!-- ══════════════════════ INNOVATION COMPETITION METRICS ══════════════════════ -->
+    <div class="metrics-ribbon">
+        <div class="metrics-container">
+            <div class="metric-item">
+                <div class="metric-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="metric-text">
+                    <span class="metric-val">3 Diagnostic Modalities</span>
+                    <span class="metric-label">X-Ray (14 โรค) · CT Lung · Brain CT</span>
                 </div>
             </div>
-            <div class="modality-grid">
-                <div class="modality-card modality-active" id="modalXray" onclick="selectModality('xray')">
-                    <div class="modality-icon-wrap">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <path d="M12 8v8M8 12h8"/>
-                        </svg>
-                    </div>
-                    <div class="modality-info">
-                        <h3>Chest X-Ray</h3>
-                        <p>ตรวจหาความผิดปกติของปอด 14 ประเภท</p>
-                    </div>
-                    <span class="mod-badge mod-ready">พร้อมใช้งาน</span>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 </div>
-                <div class="modality-card modality-active" id="modalCt" onclick="selectModality('ct')">
-                    <div class="modality-icon-wrap">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/>
-                        </svg>
-                    </div>
-                    <div class="modality-info">
-                        <h3>CT Scan — Lung Cancer</h3>
-                        <p>ตรวจหาก้อนเนื้อมะเร็งปอด (Nodule) จากภาพตัดขวาง</p>
-                    </div>
-                    <span class="mod-badge mod-ready">พร้อมใช้งาน</span>
+                <div class="metric-text">
+                    <span class="metric-val">Real-time Inference</span>
+                    <span class="metric-label">ความเร็วตรวจจับเฉลี่ย &lt; 0.5 วินาที</span>
                 </div>
-                <div class="modality-card modality-active" id="modalBrainCt" onclick="selectModality('brain_ct')">
-                    <div class="modality-icon-wrap">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4"/>
-                        </svg>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                </div>
+                <div class="metric-text">
+                    <span class="metric-val">Dual Vision Engine</span>
+                    <span class="metric-label">Object BBox Detection &amp; Pixel Segmentation</span>
+                </div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+                <div class="metric-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="metric-text">
+                    <span class="metric-val">Radiologist-in-the-Loop</span>
+                    <span class="metric-label">CDSS มาตรฐานสนับสนุนการวินิจฉัยแพทย์</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════ MAIN WORKSPACE ══════════════════════ -->
+    <main class="main-workspace">
+
+        <!-- ────── STEP 1: Modality Selection ────── -->
+        <section class="stage-section" id="stepModality">
+            <div class="stage-header">
+                <div class="stage-badge-num">1</div>
+                <div class="stage-header-info">
+                    <h2 class="stage-title">เลือกแผนกและประเภทการตรวจรังสี (Select Diagnostic Modality)</h2>
+                    <p class="stage-desc">ระบบเชื่อมต่อกับโครงข่ายประสาทเทียม YOLO ที่ฝึกฝนเฉพาะทางสำหรับภาพถ่ายแต่ละชนิด</p>
+                </div>
+            </div>
+
+            <div class="modality-grid-showcase">
+                <!-- Card 1: Chest X-Ray -->
+                <div class="modality-card-pro active-card" id="modalXray" onclick="selectModality('xray')">
+                    <div class="modality-glow-layer"></div>
+                    <div class="modality-top-row">
+                        <div class="modality-icon-frame">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                <path d="M12 7v10M7 12h10"/>
+                            </svg>
+                        </div>
+                        <span class="badge-status-ready">พร้อมตรวจ 14 รอยโรค</span>
                     </div>
-                    <div class="modality-info">
-                        <h3>Brain CT Scan</h3>
-                        <p>ตรวจหาเนื้องอก เลือดออก และความผิดปกติในสมอง จากภาพ CT</p>
+                    <div class="modality-card-body">
+                        <h3 class="modality-heading">Chest X-Ray Screening</h3>
+                        <p class="modality-subheading">ภาพถ่ายรังสีทรวงอกมาตรฐาน (PA / AP View)</p>
+                        <p class="modality-summary">
+                            ตรวจหาภาวะปอดแฟบ, หัวใจโต, น้ำท่วมปอด, ก้อนเนื้อในปอด, ลมรั่วในเยื่อหุ้มปอด, ปอดอักเสบ และความผิดปกติรวม 14 ชนิด
+                        </p>
+                        <div class="modality-tech-tags">
+                            <span class="tech-tag">YOLOv8 Detection</span>
+                            <span class="tech-tag">14 Pathologies</span>
+                            <span class="tech-tag">Bounding Box Localization</span>
+                        </div>
                     </div>
-                    <span class="mod-badge mod-ready">พร้อมใช้งาน</span>
+                    <div class="modality-card-footer">
+                        <span class="select-action-text">คลิกเพื่อเลือกแผนกนี้ &rarr;</span>
+                        <button class="btn-sample-quick" onclick="event.stopPropagation(); loadSampleCase('xray')" title="โหลดตัวอย่างสำหรับสาธิต">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            สาธิตเคสนี้
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: CT Lung Nodule -->
+                <div class="modality-card-pro" id="modalCt" onclick="selectModality('ct')">
+                    <div class="modality-glow-layer"></div>
+                    <div class="modality-top-row">
+                        <div class="modality-icon-frame">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="12" cy="12" r="9"/>
+                                <circle cx="12" cy="12" r="5" stroke-dasharray="2 2"/>
+                                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <span class="badge-status-ready">พร้อมตรวจ Nodule</span>
+                    </div>
+                    <div class="modality-card-body">
+                        <h3 class="modality-heading">CT Scan — Lung Cancer</h3>
+                        <p class="modality-subheading">เอกซเรย์คอมพิวเตอร์ปอดตัดขวาง (Axial Slice)</p>
+                        <p class="modality-summary">
+                            ตรวจหาจุดและก้อนเนื้อมะเร็งปอดระยะเริ่มต้น (Pulmonary Nodule) ความแม่นยำสูง แม้ก้อนเนื้อขนาดเล็กในเนื้อปอด
+                        </p>
+                        <div class="modality-tech-tags">
+                            <span class="tech-tag">Lung Window CT</span>
+                            <span class="tech-tag">Early Nodule Detection</span>
+                            <span class="tech-tag">Micro-Lesion Localization</span>
+                        </div>
+                    </div>
+                    <div class="modality-card-footer">
+                        <span class="select-action-text">คลิกเพื่อเลือกแผนกนี้ &rarr;</span>
+                        <button class="btn-sample-quick" onclick="event.stopPropagation(); loadSampleCase('ct')" title="โหลดตัวอย่างสำหรับสาธิต">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            สาธิตเคสนี้
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Brain CT Scan -->
+                <div class="modality-card-pro" id="modalBrainCt" onclick="selectModality('brain_ct')">
+                    <div class="modality-glow-layer"></div>
+                    <div class="modality-top-row">
+                        <div class="modality-icon-frame">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 2a10 10 0 0 0-7 17.14V21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.86A10 10 0 0 0 12 2z"/>
+                                <path d="M12 6v6m0 0l3 3m-3-3l-3 3"/>
+                            </svg>
+                        </div>
+                        <span class="badge-status-ready highlight-neuro">Neuro Segmentation</span>
+                    </div>
+                    <div class="modality-card-body">
+                        <h3 class="modality-heading">Brain CT Scan (Neuro CDSS)</h3>
+                        <p class="modality-subheading">เอกซเรย์คอมพิวเตอร์กะโหลกศีรษะและเนื้อสมอง</p>
+                        <p class="modality-summary">
+                            ตรวจจับ Stroke Lesion, ภาวะสมองขาดเลือด, เลือดออกในสมอง, เนื้องอก พร้อมระบายสีพื้นที่รอยโรค (Pixel Segmentation)
+                        </p>
+                        <div class="modality-tech-tags">
+                            <span class="tech-tag">Instance Segmentation</span>
+                            <span class="tech-tag">Lesion Area (px &amp; %)</span>
+                            <span class="tech-tag">Stroke Alert</span>
+                        </div>
+                    </div>
+                    <div class="modality-card-footer">
+                        <span class="select-action-text">คลิกเพื่อเลือกแผนกนี้ &rarr;</span>
+                        <button class="btn-sample-quick" onclick="event.stopPropagation(); loadSampleCase('brain_ct')" title="โหลดตัวอย่างสำหรับสาธิต">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            สาธิตเคสนี้
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ────── STEP 2: Patient Info + Upload (hidden by default) ────── -->
-        <section class="step-section" id="stepPatientUpload" style="display:none;">
-            <div class="step-header">
-                <span class="step-number">2</span>
-                <div>
-                    <h2 class="step-title">ข้อมูลผู้ป่วย & อัพโหลดภาพ</h2>
-                    <p class="step-desc">กรอกข้อมูลเบื้องต้น (ไม่บังคับ) และอัพโหลดภาพ X-Ray เพื่อวิเคราะห์</p>
+        <!-- ────── STEP 2: Patient EHR Info & Upload (hidden initially) ────── -->
+        <section class="stage-section" id="stepPatientUpload" style="display:none;">
+            <div class="stage-header">
+                <div class="stage-badge-num">2</div>
+                <div class="stage-header-info">
+                    <div class="stage-title-with-badge">
+                        <h2 class="stage-title" id="stageUploadTitle">ลงทะเบียนข้อมูลผู้ป่วย &amp; โหลดภาพรังสี</h2>
+                        <span class="current-modality-badge" id="currentModalityBadge">Chest X-Ray</span>
+                    </div>
+                    <p class="stage-desc">รองรับไฟล์มาตรฐาน DICOM/PNG/JPG เชื่อมต่อเข้าสู่ระบบวิเคราะห์อัตโนมัติ</p>
                 </div>
-                <button class="btn-step-back" onclick="goBackToModality()">
+                <button class="btn-step-nav" onclick="goBackToModality()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                    กลับ
+                    เปลี่ยนประเภทภาพ
                 </button>
             </div>
 
-            <div class="two-col-layout">
-                <!-- Left: Patient Info -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <h3>ข้อมูลผู้ป่วย <span class="optional-tag">(ไม่บังคับ)</span></h3>
+            <!-- Fast Demo Bar: One-click Presets for presentation -->
+            <div class="demo-presentation-bar">
+                <div class="demo-bar-left">
+                    <span class="demo-bar-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        โหมดสาธิตการแข่งขัน (Judge Demo)
+                    </span>
+                    <span class="demo-bar-hint">คลิกเลือกเคสตัวอย่างจำลองเพื่อทดสอบการวินิจฉัยได้ทันที:</span>
+                </div>
+                <div class="demo-preset-buttons">
+                    <button type="button" class="btn-demo-preset" onclick="loadSampleCase('xray')">
+                        <span class="preset-dot xray-dot"></span>
+                        <span>เคส 1: Chest X-Ray</span>
+                    </button>
+                    <button type="button" class="btn-demo-preset" onclick="loadSampleCase('ct')">
+                        <span class="preset-dot ct-dot"></span>
+                        <span>เคส 2: CT Lung Nodule</span>
+                    </button>
+                    <button type="button" class="btn-demo-preset" onclick="loadSampleCase('brain_ct')">
+                        <span class="preset-dot brain-dot"></span>
+                        <span>เคส 3: Brain CT Scan</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="workstation-dual-grid">
+                <!-- Left: Hospital EHR Patient Form -->
+                <div class="clinical-card">
+                    <div class="clinical-card-header">
+                        <div class="header-left">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <h3>ข้อมูลเวชระเบียนผู้ป่วย (EHR Demographics)</h3>
+                        </div>
+                        <button type="button" class="btn-auto-mock" onclick="generateMockPatient()" title="สุ่มข้อมูลจำลองสำหรับการพรีเซนต์">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                            สุ่มข้อมูลผู้ป่วยจำลอง
+                        </button>
                     </div>
-                    <div class="panel-body">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="patientHN">HN (Hospital Number)</label>
-                                <input type="text" id="patientHN" placeholder="เช่น 66-012345">
+                    <div class="clinical-card-body">
+                        <div class="form-grid-row">
+                            <div class="form-field">
+                                <label for="patientHN">HN (Hospital Number) <span class="req">*</span></label>
+                                <div class="input-with-icon">
+                                    <input type="text" id="patientHN" placeholder="เช่น HN-694820">
+                                    <span class="input-icon-tag">HN</span>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label for="patientPriority">ระดับความเร่งด่วน (Triage Level)</label>
+                                <select id="patientPriority">
+                                    <option value="routine">Routine (ตรวจทั่วไป)</option>
+                                    <option value="urgent">Urgent (เร่งด่วน)</option>
+                                    <option value="stat">STAT (วิกฤตฉุกเฉิน)</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="patientName">ชื่อ-นามสกุล</label>
-                                <input type="text" id="patientName" placeholder="ชื่อ นามสกุล">
-                            </div>
+
+                        <div class="form-field">
+                            <label for="patientName">ชื่อ - นามสกุล ผู้ป่วย</label>
+                            <input type="text" id="patientName" placeholder="เช่น นายสมชาย รักสุขภาพ">
                         </div>
-                        <div class="form-row two-col">
-                            <div class="form-group">
+
+                        <div class="form-grid-three">
+                            <div class="form-field">
                                 <label for="patientAge">อายุ (ปี)</label>
-                                <input type="number" id="patientAge" placeholder="อายุ" min="0" max="150">
+                                <input type="number" id="patientAge" placeholder="เช่น 58" min="0" max="130">
                             </div>
-                            <div class="form-group">
+                            <div class="form-field">
                                 <label for="patientSex">เพศ</label>
                                 <select id="patientSex">
                                     <option value="">— เลือก —</option>
@@ -135,192 +309,424 @@
                                     <option value="F">หญิง (Female)</option>
                                 </select>
                             </div>
+                            <div class="form-field">
+                                <label for="patientWard">แผนก / หอผู้ป่วย</label>
+                                <select id="patientWard">
+                                    <option value="OPD">OPD อายุรกรรม</option>
+                                    <option value="ER">ER ฉุกเฉิน</option>
+                                    <option value="IPD">IPD หอผู้ป่วยใน</option>
+                                    <option value="ICU">ICU วิกฤต</option>
+                                    <option value="CHECKUP">ศูนย์ตรวจสุขภาพ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Sensitivity Threshold Slider (Competition Feature) -->
+                        <div class="threshold-control-card">
+                            <div class="threshold-header">
+                                <div class="threshold-title-wrap">
+                                    <span class="threshold-label">AI Sensitivity Threshold:</span>
+                                    <span class="threshold-tip">(เกณฑ์ความเชื่อมั่นในการคัดกรอง)</span>
+                                </div>
+                                <span class="threshold-badge-val" id="confThresholdVal">25% (Standard)</span>
+                            </div>
+                            <input type="range" class="hospital-range-slider" id="confThresholdSlider" min="10" max="90" step="5" value="25" oninput="updateConfThresholdDisplay(this.value)">
+                            <div class="slider-scale-labels">
+                                <span>10% (High Sensitivity - คัดกรองรอยโรค)</span>
+                                <span>50%</span>
+                                <span>90% (High Specificity - ยืนยันผล)</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right: Upload -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <h3>อัพโหลดภาพ X-Ray</h3>
+                <!-- Right: PACS Image Ingest Station -->
+                <div class="clinical-card">
+                    <div class="clinical-card-header">
+                        <div class="header-left">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <h3 id="uploadCardTitle">นำเข้าภาพรังสีการแพทย์ (Medical Image Ingestion)</h3>
+                        </div>
+                        <span class="pacs-ready-tag">PACS Ingest Active</span>
                     </div>
-                    <div class="panel-body">
-                        <div class="upload-zone" id="uploadZone">
+                    <div class="clinical-card-body">
+                        <div class="pacs-dropzone" id="uploadZone">
                             <input type="file" id="fileInput" accept="image/*" hidden>
-                            <div class="upload-placeholder" id="uploadPlaceholder">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                <p class="upload-main-text">ลากไฟล์มาวาง หรือ <span class="upload-link">คลิกเพื่อเลือกไฟล์</span></p>
-                                <p class="upload-hint-text">รองรับ JPG, PNG — ขนาดไม่เกิน 20MB</p>
+
+                            <!-- Placeholder view -->
+                            <div class="dropzone-content" id="uploadPlaceholder">
+                                <div class="scanner-holo-ring">
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                    <div class="scanner-laser-beam"></div>
+                                </div>
+                                <p class="dropzone-primary-text">ลากภาพรังสีมาวางที่นี่ หรือ <span class="browse-link">คลิกเพื่อเลือกไฟล์</span></p>
+                                <p class="dropzone-secondary-text">รองรับภาพ DICOM / Radiograph / PNG / JPG (สูงสุด 25MB)</p>
+                                <div class="dropzone-security-badge">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    <span>Hospital Privacy &amp; Data Protected</span>
+                                </div>
                             </div>
-                            <div class="upload-preview" id="uploadPreview" style="display:none;">
-                                <img id="previewImage" alt="Preview">
-                                <button class="btn-remove-img" id="btnRemoveImg" title="ลบภาพ">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                                <div class="upload-file-info" id="uploadFileInfo"></div>
+
+                            <!-- Preview view -->
+                            <div class="dropzone-preview" id="uploadPreview" style="display:none;">
+                                <div class="preview-stage-container">
+                                    <img id="previewImage" alt="Radiograph Preview">
+                                    <div class="preview-pacs-overlay">
+                                        <span class="pacs-watermark" id="previewWatermark">PACS · RAW RADIOGRAPH</span>
+                                        <span class="preview-dim-tag" id="previewDimTag">-- x -- px</span>
+                                    </div>
+                                    <button class="btn-clear-preview" id="btnRemoveImg" title="นำภาพออก">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                </div>
+                                <div class="preview-meta-bar" id="uploadFileInfo"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Analyze Button -->
-            <button class="btn-analyze" id="btnAnalyze" disabled>
-                <span class="btn-content" id="btnAnalyzeContent">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <span>เริ่มวิเคราะห์ภาพด้วย AI</span>
-                </span>
-                <span class="btn-loading" id="btnAnalyzeLoading" style="display:none;">
-                    <div class="spinner"></div>
-                    <span>กำลังประมวลผลภาพ...</span>
-                </span>
-            </button>
+            <!-- Primary Analyze Action Button -->
+            <div class="analyze-cta-container">
+                <button class="btn-run-inference" id="btnAnalyze" disabled>
+                    <div class="btn-sheen-effect"></div>
+                    <span class="btn-label-group" id="btnAnalyzeContent">
+                        <svg class="cta-brain-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 0 0-7 17.14V21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1.86A10 10 0 0 0 12 2z"/>
+                            <path d="M12 6v6m0 0l3 3m-3-3l-3 3"/>
+                        </svg>
+                        <span class="cta-main-text">เริ่มกระบวนการวิเคราะห์รอยโรคด้วย AI (Start AI Diagnosis)</span>
+                        <span class="cta-sub-text">Deep Learning Neural Inference Pipeline</span>
+                    </span>
+                    <span class="btn-loading-group" id="btnAnalyzeLoading" style="display:none;">
+                        <div class="medical-pulse-spinner"></div>
+                        <div class="loading-status-texts">
+                            <span class="loading-main-text">กำลังประมวลผลผ่านโมเดลทางการแพทย์...</span>
+                            <span class="loading-stage-text" id="loadingStageText">Extracting convolutional feature maps...</span>
+                        </div>
+                    </span>
+                </button>
+            </div>
         </section>
 
-        <!-- ────── STEP 3: Results (hidden by default) ────── -->
-        <section class="step-section" id="stepResults" style="display:none;">
-            <div class="step-header">
-                <span class="step-number">3</span>
-                <div>
-                    <h2 class="step-title">ผลการวิเคราะห์</h2>
-                    <p class="step-desc" id="resultTimestamp">—</p>
+        <!-- ────── STEP 3: Results Dashboard (hidden initially) ────── -->
+        <section class="stage-section" id="stepResults" style="display:none;">
+            <div class="stage-header">
+                <div class="stage-badge-num">3</div>
+                <div class="stage-header-info">
+                    <h2 class="stage-title">รายงานผลการตรวจรังสีและการวินิจฉัย (Clinical Diagnostic Report)</h2>
+                    <p class="stage-desc" id="resultTimestamp">—</p>
                 </div>
-                <div class="step-header-actions">
-                    <button class="btn-action" id="btnPrintReport" onclick="printReport()">
+                <div class="header-action-pills">
+                    <button class="btn-action-primary" id="btnPrintReport" onclick="printReport()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                        พิมพ์รายงาน
+                        <span>พิมพ์ใบรายงานแพทย์</span>
                     </button>
-                    <button class="btn-action btn-action-outline" id="btnNewCase" onclick="startNewCase()">
+                    <button class="btn-action-secondary" onclick="copyFindingsSummary()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>คัดลอกสรุปผล</span>
+                    </button>
+                    <button class="btn-action-secondary" id="btnNewCase" onclick="startNewCase()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                        วิเคราะห์เคสใหม่
+                        <span>ตรวจเคสใหม่</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Summary Banner -->
-            <div class="result-summary" id="resultSummary">
-                <div class="summary-icon" id="summaryIcon"></div>
-                <div class="summary-info">
-                    <h3 id="summaryTitle"></h3>
-                    <p id="summarySubtitle"></p>
+            <!-- Triage Summary Alert Card -->
+            <div class="triage-summary-banner" id="resultSummary">
+                <div class="triage-status-orb" id="summaryIcon"></div>
+                <div class="triage-main-info">
+                    <div class="triage-header-line">
+                        <span class="triage-badge-tag" id="triageSeverityBadge">NORMAL</span>
+                        <h3 class="triage-heading" id="summaryTitle">ผลการวิเคราะห์</h3>
+                    </div>
+                    <p class="triage-detail" id="summarySubtitle">คำแนะนำเบื้องต้นทางการแพทย์</p>
+                </div>
+                <div class="triage-telemetry-stats">
+                    <div class="telemetry-stat-card">
+                        <span class="stat-num" id="statDetectionCount">0</span>
+                        <span class="stat-unit">รอยโรคที่ตรวจพบ</span>
+                    </div>
+                    <div class="telemetry-stat-card">
+                        <span class="stat-num" id="statInferenceLatency">--</span>
+                        <span class="stat-unit">Inference Latency</span>
+                    </div>
+                    <div class="telemetry-stat-card">
+                        <span class="stat-num" id="statTopConfidence">--%</span>
+                        <span class="stat-unit">Top Confidence</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Patient Info Display (in results) -->
-            <div class="result-patient-bar" id="resultPatientBar" style="display:none;">
-                <span id="dispPatientHN"></span>
-                <span id="dispPatientName"></span>
-                <span id="dispPatientAge"></span>
-                <span id="dispPatientSex"></span>
+            <!-- Patient Demographic Ribbon (Result View) -->
+            <div class="patient-demographic-ribbon" id="resultPatientBar" style="display:none;">
+                <div class="demo-tag" id="dispPatientHN"><span class="demo-label">HN:</span> <span class="demo-value"></span></div>
+                <div class="demo-tag" id="dispPatientName"><span class="demo-label">ผู้ป่วย:</span> <span class="demo-value"></span></div>
+                <div class="demo-tag" id="dispPatientAge"><span class="demo-label">อายุ:</span> <span class="demo-value"></span></div>
+                <div class="demo-tag" id="dispPatientSex"><span class="demo-label">เพศ:</span> <span class="demo-value"></span></div>
+                <div class="demo-tag" id="dispPatientModality"><span class="demo-label">การตรวจ:</span> <span class="demo-value"></span></div>
+                <div class="demo-tag" id="dispPatientWard"><span class="demo-label">แผนก:</span> <span class="demo-value"></span></div>
             </div>
 
-            <!-- Results Two Column Layout -->
-            <div class="results-grid">
-                <!-- Left: Image Viewer -->
-                <div class="panel panel-image-viewer">
-                    <div class="panel-header">
-                        <h3>ภาพวิเคราะห์</h3>
-                        <div class="image-toggle-group">
-                            <button class="img-toggle active" id="btnShowAnnotated" data-view="annotated">AI Detection</button>
-                            <button class="img-toggle" id="btnShowOriginal" data-view="original">ภาพต้นฉบับ</button>
+            <!-- PACS Workstation Split Layout -->
+            <div class="results-workstation-grid">
+                <!-- Left: Advanced PACS Viewer -->
+                <div class="pacs-viewer-panel">
+                    <div class="viewer-top-bar">
+                        <div class="viewer-title-group">
+                            <span class="pacs-live-indicator"></span>
+                            <h4>RADIOLOGY PACS VIEWER</h4>
+                        </div>
+                        <div class="viewer-view-switcher">
+                            <button class="view-btn active" id="btnShowAnnotated" data-view="annotated">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2zm0-4h-2V7h2z"/></svg>
+                                <span>AI Detection &amp; Masks</span>
+                            </button>
+                            <button class="view-btn" id="btnShowOriginal" data-view="original">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>ภาพถ่ายต้นฉบับ (Raw)</span>
+                            </button>
                         </div>
                     </div>
-                    <!-- Image Controls -->
-                    <div class="image-controls">
-                        <button class="img-ctrl-btn" onclick="imageZoom(1)" title="ขยาย"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
-                        <button class="img-ctrl-btn" onclick="imageZoom(-1)" title="ย่อ"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
-                        <div class="ctrl-divider"></div>
-                        <label class="ctrl-label">Brightness</label>
-                        <input type="range" class="ctrl-slider" id="sliderBrightness" min="50" max="200" value="100">
-                        <label class="ctrl-label">Contrast</label>
-                        <input type="range" class="ctrl-slider" id="sliderContrast" min="50" max="200" value="100">
-                        <div class="ctrl-divider"></div>
-                        <button class="img-ctrl-btn" onclick="resetImageControls()" title="รีเซ็ต"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></button>
-                        <button class="img-ctrl-btn" onclick="toggleFullscreen()" title="เต็มจอ"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+
+                    <!-- Medical Radiologist Viewport Toolbar -->
+                    <div class="viewer-tools-toolbar">
+                        <div class="tool-group">
+                            <button class="viewer-tool-btn" onclick="imageZoom(1)" title="ขยายภาพ (Zoom In)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <button class="viewer-tool-btn" onclick="imageZoom(-1)" title="ย่อภาพ (Zoom Out)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <button class="viewer-tool-btn" id="btnInvert" onclick="toggleInvertColors()" title="กลับสีภาพฟิล์ม (Negative / Positive Invert)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z"/></svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="tool-group slider-tool-group">
+                            <span class="tool-slider-label">ความสว่าง</span>
+                            <input type="range" class="viewer-slider" id="sliderBrightness" min="50" max="200" value="100">
+                        </div>
+                        <div class="tool-group slider-tool-group">
+                            <span class="tool-slider-label">Contrast</span>
+                            <input type="range" class="viewer-slider" id="sliderContrast" min="50" max="220" value="100">
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="tool-group">
+                            <button class="viewer-tool-btn" onclick="resetImageControls()" title="รีเซ็ตการปรับแต่งภาพ">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            </button>
+                            <button class="viewer-tool-btn" onclick="toggleFullscreen()" title="แสดงเต็มจอ (Fullscreen PACS)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="image-viewport" id="imageViewport">
-                        <img id="resultImage" class="result-img" alt="Result">
+
+                    <!-- Medical Viewport Canvas Screen -->
+                    <div class="medical-viewport-screen" id="imageViewport">
+                        <!-- HUD Overlays -->
+                        <div class="pacs-hud top-left-hud">
+                            <span class="hud-line" id="hudHN">HN: --</span>
+                            <span class="hud-line" id="hudModality">MOD: CHEST X-RAY</span>
+                            <span class="hud-line" id="hudDateTime">ACQ: --</span>
+                        </div>
+                        <div class="pacs-hud top-right-hud">
+                            <span class="hud-line" id="hudZoom">ZOOM: 100%</span>
+                            <span class="hud-line" id="hudDims">MATRIX: 1024x1024</span>
+                            <span class="hud-line">AI INFERENCE: VERIFIED</span>
+                        </div>
+                        <div class="pacs-hud bottom-left-hud">
+                            <span class="hud-line">WINDOW: LUNG/MEDIASTINUM</span>
+                            <span class="hud-line">FILTER: LINEAR-INTERPOLATED</span>
+                        </div>
+                        <div class="pacs-hud bottom-right-hud">
+                            <span class="hud-line hud-institution">RAMA-MED-INNOVATION</span>
+                        </div>
+
+                        <!-- Anatomic Orientation Markers -->
+                        <div class="orientation-marker marker-r">R</div>
+                        <div class="orientation-marker marker-l">L</div>
+
+                        <!-- Active Image -->
+                        <img id="resultImage" class="pacs-radiograph-img" alt="Clinical Result Radiograph">
                     </div>
                 </div>
 
-                <!-- Right: Findings + Notes -->
-                <div class="results-right-col">
-                    <!-- Findings -->
-                    <div class="panel">
-                        <div class="panel-header">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            <h3>รายการความผิดปกติที่ตรวจพบ</h3>
+                <!-- Right: Clinical Findings & Doctor Decision Panel -->
+                <div class="clinical-findings-panel">
+                    <!-- Findings Section -->
+                    <div class="findings-card">
+                        <div class="findings-header">
+                            <div class="findings-title-group">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <h3>รายการความผิดปกติที่ AI ตรวจพบ (Detected Pathologies)</h3>
+                            </div>
+                            <span class="findings-badge-counter" id="findingsBadgeCounter">0 รายการ</span>
                         </div>
-                        <div class="panel-body" id="findingsList"></div>
+                        <div class="findings-scroll-list" id="findingsList">
+                            <!-- Populated dynamically via JS -->
+                        </div>
                     </div>
 
-                    <!-- Clinical Notes -->
-                    <div class="panel">
-                        <div class="panel-header">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            <h3>หมายเหตุแพทย์ (Clinical Notes)</h3>
+                    <!-- Clinical Decision Notes Section -->
+                    <div class="doctor-notes-card">
+                        <div class="notes-header">
+                            <div class="notes-title-group">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <h3>บันทึกความเห็นแพทย์ (Clinical Impression &amp; Plan)</h3>
+                            </div>
+                            <span class="radiologist-tag">Radiologist Sign-off</span>
                         </div>
-                        <div class="panel-body">
-                            <textarea id="clinicalNotes" class="clinical-notes-input" rows="4" placeholder="พิมพ์ข้อสังเกต คำแนะนำ หรือบันทึกเพิ่มเติมที่นี่..."></textarea>
+
+                        <!-- One-click Quick Clinical Phrases (Judge Presentation feature) -->
+                        <div class="quick-phrase-chips">
+                            <span class="chips-label">คีย์ลัดข้อความแพทย์:</span>
+                            <button type="button" class="phrase-chip" onclick="appendClinicalNote('ยืนยันผลการตรวจพบตามรายงาน AI สอดคล้องกับอาการทางคลินิก')">+ ยืนยันผลตาม AI</button>
+                            <button type="button" class="phrase-chip" onclick="appendClinicalNote('แนะนำส่งตรวจ High-Resolution CT Chest เพิ่มเติมเพื่อประเมินความชัดเจนของรอยโรค')">+ ส่ง CT Chest เพิ่มเติม</button>
+                            <button type="button" class="phrase-chip" onclick="appendClinicalNote('แนะนำส่งต่ออายุรแพทย์โรคปอดเพื่อวางแผนการรักษาต่อ')">+ ส่งต่อแพทย์เฉพาะทาง</button>
+                            <button type="button" class="phrase-chip" onclick="appendClinicalNote('เคสฉุกเฉิน (STAT) แจ้งแพทย์เวรเจ้าของไข้รับทราบทางโทรศัพท์ทันที')">+ แจ้งเคสฉุกเฉิน STAT</button>
+                        </div>
+
+                        <textarea id="clinicalNotes" class="doctor-notes-textarea" rows="4" placeholder="พิมพ์ข้อคิดเห็นทางรังสีวิทยา, แผนการตรวจติดตาม หรือคำแนะนำเพิ่มเติม..."></textarea>
+
+                        <div class="physician-signoff-bar">
+                            <div class="physician-input-group">
+                                <label for="doctorName">แพทย์ผู้วินิจฉัย:</label>
+                                <input type="text" id="doctorName" placeholder="นพ. / พญ. (ระบุชื่อแพทย์)" value="นพ. เจนกิจ สังสุณี (ว. 49821)">
+                            </div>
+                            <span class="hospital-verified-stamp">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                                CDSS VERIFIED
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ────── DISCLAIMER ────── -->
-        <section class="disclaimer-section">
-            <div class="disclaimer-bar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <p><strong>ข้อจำกัดความรับผิดชอบ:</strong> ระบบ MediScan AI เป็นเครื่องมือสนับสนุนการตัดสินใจทางคลินิก (CDSS) เท่านั้น ผลลัพธ์ไม่สามารถทดแทนการวินิจฉัยโดยรังสีแพทย์ กรุณาใช้ร่วมกับวิจารณญาณทางวิชาชีพ</p>
+        <!-- ────── HOSPITAL DISCLAIMER ────── -->
+        <section class="hospital-disclaimer-bar">
+            <div class="disclaimer-inner">
+                <div class="disclaimer-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div class="disclaimer-text">
+                    <strong>มาตรฐานจริยธรรมและการกำกับดูแล AI ทางการแพทย์ (Clinical CDSS Disclaimer):</strong>
+                    แพลตฟอร์ม Soma Scope พัฒนาขึ้นเป็นระบบสนับสนุนการตัดสินใจทางคลินิก (Clinical Decision Support System) สำหรับงานนวัตกรรมการแพทย์ ผลลัพธ์จากการคำนวณของโครงข่ายประสาทเทียมทำหน้าที่ช่วยคัดกรองเบื้องต้นเพื่อลดภาระงานของบุคลากรทางการแพทย์ และต้องใช้ประกอบกับวิจารณญาณทางวิชาชีพของแพทย์หรือรังสีแพทย์ผู้เชี่ยวชาญเสมอ
+                </div>
             </div>
         </section>
     </main>
 
     <!-- ══════════════════════ FOOTER ══════════════════════ -->
-    <footer class="footer">
-        <p>© 2026 MediScan AI — Clinical Decision Support System</p>
+    <footer class="hospital-footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <span class="footer-brand">SOMA SCOPE CDSS</span>
+                <span class="footer-sep">·</span>
+                <span>Thailand Medical AI Innovation Contest 2026</span>
+            </div>
+            <div class="footer-right">
+                <span>Architecture: YOLOv8 / YOLOv11 Multi-Modality · FastAPI · Ultralytics</span>
+            </div>
+        </div>
     </footer>
 
-    <!-- ══════════════════════ PRINT REPORT (hidden, shown only when printing) ══════════════════════ -->
+    <!-- ══════════════════════ OFFICIAL PRINTABLE HOSPITAL RADIOLOGY REPORT ══════════════════════ -->
     <div class="print-report" id="printReport">
-        <div class="print-header">
-            <div class="print-logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <!-- Hospital Header -->
+        <div class="print-hospital-header">
+            <div class="print-hospital-logo">
+                <div class="print-cross-icon">+</div>
                 <div>
-                    <h1>MediScan AI</h1>
-                    <p>Clinical Decision Support System — AI Diagnostic Report</p>
+                    <h1>SOMA SCOPE HOSPITAL &amp; MEDICAL INNOVATION CENTER</h1>
+                    <p class="print-subhead">DEPARTMENT OF RADIOLOGY &amp; CLINICAL ARTIFICIAL INTELLIGENCE</p>
+                    <p class="print-address">ศูนย์ความเป็นเลิศด้านปัญญาประดิษฐ์ทางการแพทย์และรังสีวิทยาวินิจฉัย</p>
                 </div>
             </div>
-            <div class="print-report-date" id="printDate"></div>
+            <div class="print-report-meta">
+                <div class="report-qr-mockup">
+                    <div class="qr-box">[ QR VERIFY ]</div>
+                    <span>DIGITAL SIGNED</span>
+                </div>
+                <div class="report-date-box">
+                    <span class="print-label">วันที่ออกผล:</span>
+                    <span id="printDate" class="print-val">--/--/----</span>
+                </div>
+            </div>
         </div>
-        <hr class="print-divider">
 
-        <h2 class="print-section-title">ข้อมูลผู้ป่วย (Patient Information)</h2>
-        <table class="print-patient-table" id="printPatientTable">
-            <tr><td class="print-td-label">HN</td><td id="printHN">—</td><td class="print-td-label">ชื่อ-นามสกุล</td><td id="printName">—</td></tr>
-            <tr><td class="print-td-label">อายุ</td><td id="printAge">—</td><td class="print-td-label">เพศ</td><td id="printSex">—</td></tr>
-            <tr><td class="print-td-label">ประเภทภาพ</td><td id="printModality">—</td><td class="print-td-label">วันที่วิเคราะห์</td><td id="printAnalyzedAt">—</td></tr>
+        <div class="print-banner-title">
+            <span>ใบรายงานผลการตรวจทางรังสีวิทยาด้วยปัญญาประดิษฐ์ (AI RADIOLOGY DIAGNOSTIC REPORT)</span>
+        </div>
+
+        <!-- Patient Demographics Table -->
+        <h3 class="print-section-h3">1. ข้อมูลผู้ป่วยและบันทึกการตรวจ (PATIENT DEMOGRAPHICS &amp; STUDY INFO)</h3>
+        <table class="print-patient-table">
+            <tr>
+                <td class="td-lbl">HN (Hospital No.):</td>
+                <td class="td-val font-bold" id="printHN">—</td>
+                <td class="td-lbl">ชื่อ-นามสกุล ผู้ป่วย:</td>
+                <td class="td-val font-bold" id="printName">—</td>
+            </tr>
+            <tr>
+                <td class="td-lbl">อายุ / เพศ:</td>
+                <td class="td-val"><span id="printAge">—</span> / <span id="printSex">—</span></td>
+                <td class="td-lbl">แผนก / หอผู้ป่วย:</td>
+                <td class="td-val" id="printWard">OPD</td>
+            </tr>
+            <tr>
+                <td class="td-lbl">ประเภทการตรวจ (Modality):</td>
+                <td class="td-val font-bold text-primary" id="printModality">—</td>
+                <td class="td-lbl">เวลาที่วิเคราะห์ AI:</td>
+                <td class="td-val" id="printAnalyzedAt">—</td>
+            </tr>
         </table>
 
-        <h2 class="print-section-title">ภาพวิเคราะห์ (AI Detection Image)</h2>
-        <div class="print-image-wrap">
-            <img id="printResultImage" alt="Result">
+        <!-- Radiograph Image Showcase -->
+        <h3 class="print-section-h3">2. ภาพถ่ายรังสีและผลตรวจจับรอยโรค (RADIOGRAPH &amp; AI ANNOTATED FINDINGS)</h3>
+        <div class="print-radiograph-box">
+            <img id="printResultImage" alt="AI Detection Radiograph">
+            <div class="print-img-caption">ภาพตรวจจับรอยโรคพร้อม Bounding Box / Segmentation Mask จากโมเดล AI</div>
         </div>
 
-        <h2 class="print-section-title">สรุปผลการวิเคราะห์ (Analysis Summary)</h2>
-        <div id="printSummaryText" class="print-summary-text"></div>
-        <div id="printFindingsTable"></div>
+        <!-- Findings Summary -->
+        <h3 class="print-section-h3">3. ผลการตรวจทางรังสีวิทยา (RADIOLOGIC FINDINGS &amp; SEVERITY)</h3>
+        <div class="print-summary-box" id="printSummaryText"></div>
+        <div id="printFindingsTable" class="print-table-container"></div>
 
-        <h2 class="print-section-title">หมายเหตุแพทย์ (Clinical Notes)</h2>
-        <div id="printClinicalNotes" class="print-clinical-notes">—</div>
+        <!-- Clinical Impression & Doctor Signature -->
+        <h3 class="print-section-h3">4. ความเห็นแพทย์ผู้เชี่ยวชาญ (CLINICAL IMPRESSION &amp; RECOMMENDATION)</h3>
+        <div class="print-notes-box" id="printClinicalNotes">— ไม่มีบันทึกเพิ่มเติม —</div>
 
-        <div class="print-footer">
-            <p>รายงานนี้สร้างโดยระบบ MediScan AI — ผลการวิเคราะห์เป็นเพียงเครื่องมือสนับสนุนการตัดสินใจทางคลินิก ไม่สามารถทดแทนการวินิจฉัยโดยแพทย์ผู้เชี่ยวชาญ</p>
+        <div class="print-signatures-row">
+            <div class="sig-col">
+                <div class="sig-line"></div>
+                <p class="sig-name" id="printDoctorName">นพ. เจนกิจ สังสุณี (ว. 49821)</p>
+                <p class="sig-title">รังสีแพทย์ผู้รับรองผล (Attending Radiologist)</p>
+            </div>
+            <div class="sig-col">
+                <div class="sig-stamp-box">
+                    <div class="stamp-circle">
+                        <span>SOMA SCOPE</span>
+                        <span>AI VERIFIED</span>
+                        <span>OFFICIAL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="print-footer-notice">
+            <p><strong>ข้อควรระวัง:</strong> ผลการวิเคราะห์นี้สร้างโดยระบบ AI สำหรับสนับสนุนการตัดสินใจทางคลินิก (CDSS) การวินิจฉัยโรคขั้นสุดท้ายต้องกระทำโดยแพทย์ผู้มีใบอนุญาตประกอบวิชาชีพเวชกรรมเท่านั้น</p>
         </div>
     </div>
 
-    <script src="/static/script.js?v=5"></script>
+    <!-- Scripts -->
+    <script src="/static/script.js?v=12"></script>
 </body>
 </html>
