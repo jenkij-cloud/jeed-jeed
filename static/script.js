@@ -308,6 +308,12 @@ async function runAnalysis() {
         fd.append('file', selectedFile);
         fd.append('modality', currentModality);
         fd.append('conf_threshold', currentConfThreshold.toString());
+        fd.append('patient_hn', document.getElementById('patientHN')?.value || '');
+        fd.append('patient_name', document.getElementById('patientName')?.value || '');
+        fd.append('patient_age', document.getElementById('patientAge')?.value || '');
+        fd.append('patient_sex', document.getElementById('patientSex')?.value || '');
+        fd.append('patient_ward', document.getElementById('patientWard')?.value || '');
+        fd.append('patient_priority', document.getElementById('patientPriority')?.value || '');
 
         const resp = await fetch('/api/predict', { method: 'POST', body: fd });
         const data = await resp.json();
@@ -324,6 +330,8 @@ async function runAnalysis() {
         lastAnalysisData = data;
 
         renderResults(data);
+        updateHistoryBadge();
+        showToast('บันทึกผลการตรวจลงคลังประวัติ PACS อัตโนมัติเรียบร้อย', 'success');
     } catch (err) {
         clearInterval(stageInterval);
         console.error(err);
@@ -740,3 +748,288 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 350);
     }, 3800);
 }
+
+// ─── PACS Examination History & Archive Logic ──────────────────────────────
+let allHistoryItems = [];
+let activeHistoryFilter = 'all';
+
+async function updateHistoryBadge() {
+    try {
+        const resp = await fetch('/api/history');
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const badge = document.getElementById('historyHeaderBadge');
+        if (badge) {
+            badge.textContent = data.total || 0;
+        }
+    } catch (e) {
+        console.warn('Cannot fetch history count', e);
+    }
+}
+
+function openHistoryModal() {
+    const modal = document.getElementById('historyModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    loadHistory();
+}
+
+function closeHistoryModal() {
+    const modal = document.getElementById('historyModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+async function loadHistory() {
+    const loading = document.getElementById('historyLoading');
+    const empty = document.getElementById('historyEmpty');
+    const container = document.getElementById('historyCardsContainer');
+
+    loading.style.display = 'flex';
+    empty.style.display = 'none';
+    container.innerHTML = '';
+
+    try {
+        const resp = await fetch('/api/history');
+        const data = await resp.json();
+        loading.style.display = 'none';
+
+        if (!resp.ok || !data.success) {
+            showToast('ไม่สามารถโหลดประวัติการตรวจได้', 'error');
+            return;
+        }
+
+        allHistoryItems = data.history || [];
+
+        // Update stats
+        const total = allHistoryItems.length;
+        const pathologic = allHistoryItems.filter(x => x.total_detections > 0).length;
+        const normal = total - pathologic;
+        const critical = allHistoryItems.filter(x => x.severity === 'critical').length;
+
+        document.getElementById('hStatTotal').textContent = total;
+        document.getElementById('hStatPathologic').textContent = pathologic;
+        document.getElementById('hStatNormal').textContent = normal;
+        document.getElementById('hStatCritical').textContent = critical;
+        document.getElementById('historyHeaderBadge').textContent = total;
+
+        filterHistoryList();
+    } catch (e) {
+        loading.style.display = 'none';
+        console.error(e);
+        showToast('เกิดข้อผิดพลาดในการโหลดประวัติ', 'error');
+    }
+}
+
+function setHistoryFilter(type, btnEl) {
+    activeHistoryFilter = type;
+    document.querySelectorAll('.h-pill').forEach(p => p.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    filterHistoryList();
+}
+
+function filterHistoryList() {
+    const term = (document.getElementById('historySearchInput')?.value || '').toLowerCase().trim();
+    const container = document.getElementById('historyCardsContainer');
+    const empty = document.getElementById('historyEmpty');
+
+    let filtered = allHistoryItems.filter(item => {
+        // Filter by type
+        if (activeHistoryFilter === 'critical' && item.severity !== 'critical') return false;
+        if (['brain_ct', 'ct', 'xray'].includes(activeHistoryFilter) && item.modality !== activeHistoryFilter) return false;
+
+        // Filter by search term
+        if (term) {
+            const matchHN = (item.hn || '').toLowerCase().includes(term);
+            const matchName = (item.patient_name || '').toLowerCase().includes(term);
+            const matchDiag = (item.top_diagnosis || '').toLowerCase().includes(term);
+            return matchHN || matchName || matchDiag;
+        }
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'flex';
+    } else {
+        empty.style.display = 'none';
+        renderHistoryCards(filtered);
+    }
+}
+
+function renderHistoryCards(items) {
+    const container = document.getElementById('historyCardsContainer');
+    container.innerHTML = '';
+
+    items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'history-card-item';
+
+        const d = new Date(item.created_at);
+        const timeStr = d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+        const isCrit = item.severity === 'critical';
+        const isDang = item.severity === 'danger';
+        const isWarn = item.severity === 'warning';
+        const sevClass = isCrit ? 'text-critical' : isDang ? 'text-danger' : isWarn ? 'text-warning' : 'text-success';
+
+        const thumbSrc = item.thumbnail_b64.startsWith('data:') ? item.thumbnail_b64 : `data:image/jpeg;base64,${item.thumbnail_b64}`;
+
+        card.innerHTML = `
+            <div class="h-thumb-wrap">
+                <img src="${thumbSrc}" class="h-thumb-img" alt="Thumbnail">
+            </div>
+            <div class="h-card-main">
+                <div class="h-patient-row">
+                    <span class="h-hn-badge">${item.hn || 'HN-UNKNOWN'}</span>
+                    <span class="h-patient-name">${item.patient_name || 'ผู้ป่วย'}</span>
+                    <span class="h-patient-meta">${item.patient_age ? item.patient_age + ' ปี' : ''} ${item.patient_sex === 'M' ? 'ชาย' : item.patient_sex === 'F' ? 'หญิง' : ''}</span>
+                    ${item.patient_ward ? `<span class="h-badge-ward">${item.patient_ward}</span>` : ''}
+                    ${item.patient_priority === 'stat' ? `<span class="h-badge-stat">STAT ฉุกเฉิน</span>` : ''}
+                </div>
+                <div class="h-diagnosis-row">
+                    <span class="h-modality-pill">${modalityDisplayNames[item.modality] || item.modality}</span>
+                    <span class="h-top-diag ${sevClass}">
+                        ${item.total_detections > 0 ? `<strong>${item.top_diagnosis}</strong> (${item.top_confidence_pct})` : '✓ ปกติ ไม่พบรอยโรค'}
+                    </span>
+                    <span class="h-findings-count">${item.total_detections} รอยโรค</span>
+                </div>
+                <div class="h-footer-meta">
+                    <span>🕒 ${timeStr}</span>
+                    <span>⚡ ความเร็ว ${item.inference_time_ms || '--'} ms</span>
+                    ${item.doctor_name ? `<span>👨‍⚕️ ${item.doctor_name}</span>` : ''}
+                </div>
+            </div>
+            <div class="h-card-actions">
+                <button class="btn-h-open" onclick="openHistoryCaseInViewer(${item.id})">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    เปิดดูเคสนี้
+                </button>
+                <button class="btn-h-print" onclick="printHistoryCase(${item.id})">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    พิมพ์รายงาน
+                </button>
+                <button class="btn-h-del" onclick="deleteHistoryCase(${item.id}, event)" title="ลบเคสนี้">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                    ลบ
+                </button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+async function openHistoryCaseInViewer(id) {
+    try {
+        const resp = await fetch(`/api/history/${id}`);
+        const data = await resp.json();
+        if (!resp.ok || !data.success) {
+            showToast('ไม่สามารถเปิดเคสได้', 'error');
+            return;
+        }
+
+        const c = data.case;
+        closeHistoryModal();
+
+        // Switch to correct modality
+        selectModality(c.modality);
+
+        // Fill patient details
+        document.getElementById('patientHN').value = c.hn || '';
+        document.getElementById('patientName').value = c.patient_name || '';
+        document.getElementById('patientAge').value = c.patient_age || '';
+        document.getElementById('patientSex').value = c.patient_sex || 'M';
+        document.getElementById('patientWard').value = c.patient_ward || 'OPD';
+        document.getElementById('patientPriority').value = c.patient_priority || 'routine';
+
+        // Set images
+        annotatedB64 = c.annotated_image;
+        originalB64 = c.original_image;
+        lastAnalysisData = {
+            total_detections: c.total_detections,
+            detections: c.detections,
+            analyzed_at: c.created_at,
+            inference_time_ms: c.inference_time_ms,
+            analysis_type: c.analysis_type,
+            annotated_image: c.annotated_image,
+            original_image: c.original_image,
+        };
+
+        if (c.doctor_notes) clinicalNotes.value = c.doctor_notes;
+        if (c.doctor_name) doctorNameInput.value = c.doctor_name;
+
+        // Render in workstation
+        renderResults(lastAnalysisData);
+
+        showToast(`เปิดเคส ${c.hn} (${c.patient_name}) ในเครื่องอ่านเรียบร้อย`, 'success');
+    } catch (e) {
+        console.error(e);
+        showToast('เกิดข้อผิดพลาดในการเปิดเคส', 'error');
+    }
+}
+
+async function printHistoryCase(id) {
+    await openHistoryCaseInViewer(id);
+    setTimeout(() => {
+        triggerPrint();
+    }, 400);
+}
+
+async function deleteHistoryCase(id, event) {
+    if (event) event.stopPropagation();
+    if (!confirm('ต้องการลบประวัติการตรวจเคสนี้ใช่หรือไม่?')) return;
+
+    try {
+        const resp = await fetch(`/api/history/${id}`, { method: 'DELETE' });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+            showToast('ลบประวัติเคสเรียบร้อย', 'success');
+            loadHistory();
+        } else {
+            showToast('ไม่สามารถลบได้', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('เกิดข้อผิดพลาดในการลบ', 'error');
+    }
+}
+
+async function clearAllHistory() {
+    if (!confirm('คำเตือน: คุณต้องการล้างประวัติการตรวจทั้งหมดในระบบใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+
+    try {
+        const resp = await fetch('/api/history/clear', { method: 'POST' });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+            showToast('ล้างประวัติการตรวจทั้งหมดแล้ว', 'success');
+            loadHistory();
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('เกิดข้อผิดพลาด', 'error');
+    }
+}
+
+// Initialize history badge on startup
+document.addEventListener('DOMContentLoaded', () => {
+    updateHistoryBadge();
+});
+updateHistoryBadge();
+
+// Explicitly bind all global onclick handlers to window
+window.openHistoryModal = openHistoryModal;
+window.closeHistoryModal = closeHistoryModal;
+window.setHistoryFilter = setHistoryFilter;
+window.filterHistoryList = filterHistoryList;
+window.openHistoryCaseInViewer = openHistoryCaseInViewer;
+window.printHistoryCase = printHistoryCase;
+window.deleteHistoryCase = deleteHistoryCase;
+window.clearAllHistory = clearAllHistory;
+window.loadSampleCase = loadSampleCase;
+window.selectModality = selectModality;
+window.goBackToModality = goBackToModality;
+window.generateMockPatient = generateMockPatient;
+
+

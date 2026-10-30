@@ -35,19 +35,17 @@
 
             <!-- Hospital Telemetry HUD -->
             <div class="header-telemetry">
-                <div class="telemetry-pill">
-                    <span class="status-indicator-dot online"></span>
-                    <span class="telemetry-label">YOLO Core:</span>
-                    <span class="telemetry-val">Ensemble v8/11</span>
-                </div>
-                <div class="telemetry-pill d-none-mobile">
-                    <span class="telemetry-label">PACS Bridge:</span>
-                    <span class="telemetry-val">DICOM 3.0</span>
-                </div>
-                <div class="telemetry-pill d-none-mobile">
-                    <span class="telemetry-label">Institution:</span>
-                    <span class="telemetry-val highlight">INNOVATION-MED-CENTER</span>
-                </div>
+                <button class="btn-history-trigger" id="btnOpenHistory" onclick="openHistoryModal()" title="เปิดดูประวัติการตรวจทั้งหมด">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>ประวัติการตรวจ (PACS Archive)</span>
+                    <span class="history-badge-count" id="historyHeaderBadge">0</span>
+                </button>
                 <div class="hospital-clock" id="hospitalClock">
                     <span id="clockTime">--:--:--</span>
                     <span id="clockDate" class="clock-date">--/--/----</span>
@@ -726,7 +724,88 @@
         </div>
     </div>
 
+    <!-- ══════════════════════ PACS EXAMINATION HISTORY MODAL ══════════════════════ -->
+    <div class="history-modal-backdrop" id="historyModal" style="display:none;" onclick="if(event.target===this) closeHistoryModal()">
+        <div class="history-modal-window">
+            <div class="history-modal-header">
+                <div class="history-header-title-group">
+                    <div class="history-icon-badge">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="history-modal-title">คลังประวัติการตรวจรังสีวิทยา (PACS Examination History &amp; Audit Trail)</h2>
+                        <p class="history-modal-sub">บันทึกเวชระเบียนภาพถ่ายและผลการวิเคราะห์ AI รายเคส สามารถเปิดดูซ้ำหรือสั่งพิมพ์รายงานย้อนหลังได้ทันที</p>
+                    </div>
+                </div>
+                <div class="history-header-actions">
+                    <button class="btn-history-clear" onclick="clearAllHistory()" title="ล้างประวัติการตรวจทั้งหมด">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        ล้างประวัติ
+                    </button>
+                    <button class="btn-history-close" onclick="closeHistoryModal()" aria-label="Close">&times;</button>
+                </div>
+            </div>
+
+            <!-- Stats Ribbon -->
+            <div class="history-stats-bar">
+                <div class="h-stat-chip">
+                    <span class="h-stat-label">เคสทั้งหมด</span>
+                    <span class="h-stat-val" id="hStatTotal">0</span>
+                </div>
+                <div class="h-stat-chip">
+                    <span class="h-stat-label">ตรวจพบรอยโรค</span>
+                    <span class="h-stat-val text-danger" id="hStatPathologic">0</span>
+                </div>
+                <div class="h-stat-chip">
+                    <span class="h-stat-label">ปกติ (Normal)</span>
+                    <span class="h-stat-val text-success" id="hStatNormal">0</span>
+                </div>
+                <div class="h-stat-chip">
+                    <span class="h-stat-label">เคสวิกฤต (Critical)</span>
+                    <span class="h-stat-val text-critical" id="hStatCritical">0</span>
+                </div>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div class="history-filter-row">
+                <div class="history-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="historySearchInput" placeholder="ค้นหาด้วย HN, ชื่อผู้ป่วย หรือโรค..." oninput="filterHistoryList()">
+                </div>
+                <div class="history-filter-pills">
+                    <button class="h-pill active" onclick="setHistoryFilter('all', this)">ทั้งหมด</button>
+                    <button class="h-pill" onclick="setHistoryFilter('brain_ct', this)">Brain CT</button>
+                    <button class="h-pill" onclick="setHistoryFilter('ct', this)">CT Lung</button>
+                    <button class="h-pill" onclick="setHistoryFilter('xray', this)">Chest X-Ray</button>
+                    <button class="h-pill" onclick="setHistoryFilter('critical', this)">เฉพาะเคสวิกฤต</button>
+                </div>
+            </div>
+
+            <!-- History List Body -->
+            <div class="history-modal-body" id="historyModalBody">
+                <div class="history-loading-spinner" id="historyLoading">
+                    <div class="spinner-ring"></div>
+                    <span>กำลังโหลดประวัติการตรวจจากฐานข้อมูล PACS...</span>
+                </div>
+                <div class="history-empty-state" id="historyEmpty" style="display:none;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="11" y2="17"/></svg>
+                    <p class="empty-title">ยังไม่มีประวัติการตรวจในระบบ</p>
+                    <p class="empty-sub">เมื่อทำการวิเคราะห์ภาพรังสี ระบบจะบันทึกประวัติและผลวินิจฉัยลงในคลังนี้อัตโนมัติ</p>
+                </div>
+                <div class="history-grid-cards" id="historyCardsContainer">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="/static/script.js?v=12"></script>
+    <script src="/static/script.js?v=14"></script>
 </body>
 </html>

@@ -8,10 +8,13 @@ on chest X-ray images to detect 14 types of lung abnormalities.
 import io
 import time
 import base64
+import json
+import sqlite3
 from pathlib import Path
 from datetime import datetime
 
 import cv2
+import torch
 import numpy as np
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile, Request, Form
@@ -140,6 +143,20 @@ CT_DISEASE_MAP = {
 }
 
 BRAIN_CT_DISEASE_MAP = {
+    "Stroke_Lesion": {
+        "name_en": "Stroke Lesion",
+        "name_th": "รอยโรคสมองขาดเลือด / รอยโรคหลอดเลือดสมอง",
+        "description": "ตรวจพบรอยโรคในเนื้อสมองจากการขาดเลือดหรือเลือดออก (Acute Ischemic / Hemorrhagic Stroke) จัดเป็นภาวะวิกฤตที่ต้องได้รับการรักษาเร่งด่วน",
+        "severity": "critical",
+        "color": (60, 20, 220),   # Crimson
+    },
+    "stroke_lesion": {
+        "name_en": "Stroke Lesion",
+        "name_th": "รอยโรคสมองขาดเลือด / รอยโรคหลอดเลือดสมอง",
+        "description": "ตรวจพบรอยโรคในเนื้อสมองจากการขาดเลือดหรือเลือดออก (Acute Ischemic / Hemorrhagic Stroke) จัดเป็นภาวะวิกฤตที่ต้องได้รับการรักษาเร่งด่วน",
+        "severity": "critical",
+        "color": (60, 20, 220),   # Crimson
+    },
     "0": {
         "name_en": "Brain Tumor",
         "name_th": "เนื้องอกสมอง",
@@ -212,22 +229,53 @@ templates_dir = Path(__file__).parent / "templates"
 templates_dir.mkdir(exist_ok=True)
 templates = Jinja2Templates(directory=str(templates_dir))
 
+# Acceleration device configuration
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+USE_HALF = (DEVICE != "cpu")
+print(f"🚀 Acceleration Engine: {DEVICE} (FP16 Half-Precision: {USE_HALF})")
+if torch.cuda.is_available():
+    print(f"🎮 GPU Detected: {torch.cuda.get_device_name(0)}")
+    torch.backends.cudnn.benchmark = True
+
 # Load model at startup
 print("🔄 Loading YOLO models...")
 model = YOLO(str(MODEL_PATH))
+if torch.cuda.is_available():
+    model.to(DEVICE)
+
 try:
     ct_model = YOLO(str(CT_MODEL_PATH))
+    if torch.cuda.is_available():
+        ct_model.to(DEVICE)
     print(f"✅ CT Model loaded successfully! Classes: {ct_model.names}")
 except Exception as e:
     ct_model = None
     print(f"⚠️ Failed to load CT model: {e}")
+
 try:
     brain_ct_model = YOLO(str(BRAIN_CT_MODEL_PATH))
+    if torch.cuda.is_available():
+        brain_ct_model.to(DEVICE)
     print(f"✅ Brain CT Model loaded successfully! Classes: {brain_ct_model.names}")
 except Exception as e:
     brain_ct_model = None
     print(f"⚠️ Failed to load Brain CT model: {e}")
+
 print(f"✅ X-Ray Model loaded successfully! Classes: {model.names}")
+
+# Warmup models to eliminate first-request cold-start latency
+print("⚡ Warming up neural networks for instant sub-second response...")
+dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
+try:
+    with torch.inference_mode():
+        model.predict(dummy_img, imgsz=640, device=DEVICE, half=USE_HALF, verbose=False)
+        if ct_model:
+            ct_model.predict(dummy_img, imgsz=640, device=DEVICE, half=USE_HALF, verbose=False)
+        if brain_ct_model:
+            brain_ct_model.predict(dummy_img, imgsz=640, device=DEVICE, half=USE_HALF, verbose=False)
+    print("✨ Model warmup complete! Ready for competition demonstration.")
+except Exception as e:
+    print(f"⚠️ Warmup info: {e}")
 
 
 # ─── Helper Functions ─────────────────────────────────────────────────────────
@@ -363,9 +411,14 @@ def draw_segmentation(image: np.ndarray, results: list, current_model, disease_m
     return annotated
 
 
-def image_to_base64(image: np.ndarray) -> str:
-    """Convert OpenCV image (BGR) to base64 JPEG string."""
-    _, buffer = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 92])
+def image_to_base64(image: np.ndarray, quality: int = 85) -> str:
+    """Convert OpenCV image (BGR) to base64 JPEG string with optimized compression."""
+    h, w = image.shape[:2]
+    max_dim = max(h, w)
+    if max_dim > 1280:
+        scale = 1280 / max_dim
+        image = cv2.resize(image, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+    _, buffer = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, quality])
     return base64.b64encode(buffer).decode("utf-8")
 
 
@@ -377,11 +430,102 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+# ─── Database & Examination History ──────────────────────────────────────────
+
+DB_PATH = Path(__file__).parent / "history.db"
+
+def init_db():
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        c = conn.cursor()
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS exam_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hn TEXT,
+            patient_name TEXT,
+            patient_age TEXT,
+            patient_sex TEXT,
+            patient_ward TEXT,
+            patient_priority TEXT,
+            modality TEXT,
+            total_detections INTEGER,
+            detections_json TEXT,
+            severity TEXT,
+            top_confidence REAL,
+            top_diagnosis TEXT,
+            inference_time_ms REAL,
+            created_at TEXT,
+            original_image TEXT,
+            annotated_image TEXT,
+            doctor_notes TEXT DEFAULT '',
+            doctor_name TEXT DEFAULT ''
+        )
+        """)
+        conn.commit()
+
+init_db()
+
+def save_exam_history(
+    hn: str,
+    patient_name: str,
+    patient_age: str,
+    patient_sex: str,
+    patient_ward: str,
+    patient_priority: str,
+    modality: str,
+    detections: list,
+    inference_time_ms: float,
+    original_b64: str,
+    annotated_b64: str,
+    doctor_notes: str = "",
+    doctor_name: str = "",
+) -> int:
+    """Save an examination result to SQLite database."""
+    if not detections:
+        severity = "low"
+        top_conf = 0.0
+        top_diag = "ไม่พบความผิดปกติ (Normal)"
+    else:
+        sev_order = {"critical": 4, "danger": 3, "warning": 2, "low": 1}
+        max_sev = max(detections, key=lambda d: sev_order.get(d.get("severity", "low"), 1)).get("severity", "low")
+        severity = max_sev
+        top_item = detections[0]
+        top_conf = float(top_item.get("confidence", 0.0))
+        top_diag = f"{top_item.get('name_en', '')} ({top_item.get('name_th', '')})"
+
+    created_at = datetime.now().isoformat()
+    hn_val = hn.strip() or f"HN-{datetime.now().strftime('%m%d%H%M')}"
+    name_val = patient_name.strip() or "ผู้ป่วยทั่วไป (General Patient)"
+
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO exam_history (
+                hn, patient_name, patient_age, patient_sex, patient_ward, patient_priority,
+                modality, total_detections, detections_json, severity, top_confidence,
+                top_diagnosis, inference_time_ms, created_at, original_image, annotated_image,
+                doctor_notes, doctor_name
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            hn_val, name_val, patient_age, patient_sex, patient_ward, patient_priority,
+            modality, len(detections), json.dumps(detections, ensure_ascii=False),
+            severity, top_conf, top_diag, inference_time_ms, created_at,
+            original_b64, annotated_b64, doctor_notes, doctor_name
+        ))
+        conn.commit()
+        return c.lastrowid
+
+
 @app.post("/api/predict")
 async def predict(
     file: UploadFile = File(...),
     modality: str = Form("xray"),
     conf_threshold: float = Form(0.25),
+    patient_hn: str = Form(""),
+    patient_name: str = Form(""),
+    patient_age: str = Form(""),
+    patient_sex: str = Form(""),
+    patient_ward: str = Form(""),
+    patient_priority: str = Form(""),
 ):
     """Run YOLO inference on an uploaded X-ray or CT image."""
     try:
@@ -413,11 +557,19 @@ async def predict(
             modality_names = {"ct": "CT Scan ปอด", "brain_ct": "CT Scan สมอง", "xray": "X-Ray"}
             return JSONResponse(status_code=500, content={"error": f"โมเดล {modality_names.get(modality, modality)} ยังไม่พร้อมใช้งาน"})
 
-        # Run inference
+        # Run inference with torch.inference_mode()
         is_segmentation = (modality == "brain_ct")
-        # Ensure threshold is within reasonable bounds
         effective_conf = max(0.05, min(0.95, float(conf_threshold)))
-        results = current_model.predict(source=image, conf=effective_conf, verbose=False)
+
+        with torch.inference_mode():
+            results = current_model.predict(
+                source=image,
+                imgsz=640,
+                conf=effective_conf,
+                device=DEVICE,
+                half=USE_HALF,
+                verbose=False
+            )
 
         # Draw annotations on image
         if is_segmentation:
@@ -481,8 +633,28 @@ async def predict(
         detections.sort(key=lambda d: d["confidence"], reverse=True)
         inference_time_ms = round((time.time() - start_time) * 1000, 1)
 
+        # Save to database history
+        try:
+            history_id = save_exam_history(
+                hn=patient_hn,
+                patient_name=patient_name,
+                patient_age=patient_age,
+                patient_sex=patient_sex,
+                patient_ward=patient_ward,
+                patient_priority=patient_priority,
+                modality=modality,
+                detections=detections,
+                inference_time_ms=inference_time_ms,
+                original_b64=original_b64,
+                annotated_b64=annotated_b64,
+            )
+        except Exception as e_hist:
+            print(f"⚠️ History save warning: {e_hist}")
+            history_id = None
+
         return JSONResponse(content={
             "success": True,
+            "history_id": history_id,
             "total_detections": len(detections),
             "detections": detections,
             "annotated_image": annotated_b64,
@@ -499,6 +671,140 @@ async def predict(
             status_code=500,
             content={"error": f"เกิดข้อผิดพลาดในการวิเคราะห์: {str(e)}"},
         )
+
+
+# ─── Examination History API Endpoints ────────────────────────────────────────
+
+@app.get("/api/history")
+async def get_history():
+    """Return summary list of past examinations."""
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("""
+                SELECT id, hn, patient_name, patient_age, patient_sex, patient_ward,
+                       patient_priority, modality, total_detections, severity,
+                       top_confidence, top_diagnosis, inference_time_ms, created_at,
+                       doctor_notes, doctor_name, annotated_image
+                FROM exam_history
+                ORDER BY id DESC
+                LIMIT 100
+            """)
+            rows = c.fetchall()
+            items = []
+            for r in rows:
+                d = dict(r)
+                items.append({
+                    "id": d["id"],
+                    "hn": d["hn"],
+                    "patient_name": d["patient_name"],
+                    "patient_age": d["patient_age"],
+                    "patient_sex": d["patient_sex"],
+                    "patient_ward": d["patient_ward"],
+                    "patient_priority": d["patient_priority"],
+                    "modality": d["modality"],
+                    "total_detections": d["total_detections"],
+                    "severity": d["severity"],
+                    "top_confidence": d["top_confidence"],
+                    "top_confidence_pct": f"{d['top_confidence']:.1%}" if d["top_confidence"] else "0%",
+                    "top_diagnosis": d["top_diagnosis"],
+                    "inference_time_ms": d["inference_time_ms"],
+                    "created_at": d["created_at"],
+                    "doctor_notes": d["doctor_notes"],
+                    "doctor_name": d["doctor_name"],
+                    "thumbnail_b64": d["annotated_image"],
+                })
+            return JSONResponse({"success": True, "total": len(items), "history": items})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"ไม่สามารถดึงประวัติ: {str(e)}"})
+
+
+@app.get("/api/history/{exam_id}")
+async def get_history_detail(exam_id: int):
+    """Return full case details for viewing in the PACS workstation."""
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("SELECT * FROM exam_history WHERE id = ?", (exam_id,))
+            row = c.fetchone()
+            if not row:
+                return JSONResponse(status_code=404, content={"error": "ไม่พบประวัติการตรวจนี้"})
+
+            d = dict(row)
+            detections = json.loads(d["detections_json"]) if d["detections_json"] else []
+            return JSONResponse({
+                "success": True,
+                "case": {
+                    "id": d["id"],
+                    "hn": d["hn"],
+                    "patient_name": d["patient_name"],
+                    "patient_age": d["patient_age"],
+                    "patient_sex": d["patient_sex"],
+                    "patient_ward": d["patient_ward"],
+                    "patient_priority": d["patient_priority"],
+                    "modality": d["modality"],
+                    "total_detections": d["total_detections"],
+                    "detections": detections,
+                    "severity": d["severity"],
+                    "top_confidence": d["top_confidence"],
+                    "top_confidence_pct": f"{d['top_confidence']:.1%}" if d["top_confidence"] else "0%",
+                    "top_diagnosis": d["top_diagnosis"],
+                    "inference_time_ms": d["inference_time_ms"],
+                    "created_at": d["created_at"],
+                    "doctor_notes": d["doctor_notes"],
+                    "doctor_name": d["doctor_name"],
+                    "original_image": d["original_image"],
+                    "annotated_image": d["annotated_image"],
+                    "analysis_type": "segmentation" if d["modality"] == "brain_ct" else "detection",
+                }
+            })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"เกิดข้อผิดพลาด: {str(e)}"})
+
+
+@app.delete("/api/history/{exam_id}")
+async def delete_history_item(exam_id: int):
+    """Delete a single exam history record."""
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM exam_history WHERE id = ?", (exam_id,))
+            conn.commit()
+        return JSONResponse({"success": True, "message": f"ลบประวัติรหัส {exam_id} เรียบร้อย"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/history/clear")
+async def clear_all_history():
+    """Clear all examination history."""
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM exam_history")
+            conn.commit()
+        return JSONResponse({"success": True, "message": "ล้างประวัติการตรวจทั้งหมดเรียบร้อย"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/history/{exam_id}/notes")
+async def update_case_notes(exam_id: int, doctor_notes: str = Form(""), doctor_name: str = Form("")):
+    """Save doctor signature and notes to history record."""
+    try:
+        with sqlite3.connect(str(DB_PATH)) as conn:
+            c = conn.cursor()
+            c.execute("""
+                UPDATE exam_history
+                SET doctor_notes = ?, doctor_name = ?
+                WHERE id = ?
+            """, (doctor_notes, doctor_name, exam_id))
+            conn.commit()
+        return JSONResponse({"success": True, "message": "บันทึกความเห็นแพทย์เรียบร้อย"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
